@@ -33,7 +33,7 @@ import (
 
 
 func main() {
-	logger := logger.Neww(logger.LoggerConfig{Enabled:true, AllowFileLog:true, AllowConsoleLog:true})
+	logger := logger.New(logger.LoggerConfig{Enabled:true, AllowFileLog:true, AllowConsoleLog:true})
 	logger.Info("Info message")
 	logger.Warn("Warn message")
 	logger.Critical("Critical message")

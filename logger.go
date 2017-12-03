@@ -109,7 +109,7 @@ func (logger *Logger) Critical(msg string)  {
 	logger.logQueue.Add(details)
 }
 
-func Neww(config LoggerConfig) *Logger {
+func New(config LoggerConfig) *Logger {
 	logger := &Logger{}
 	logger.logConfig = config
 	logger.logConfig.Enabled = logger.logConfig.Enabled && (logger.logConfig.AllowFileLog || logger.logConfig.AllowConsoleLog)
