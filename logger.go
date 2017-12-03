@@ -1,4 +1,4 @@
-package logger
+package asyncLogger
 
 
 import (
@@ -136,7 +136,7 @@ func (logger *Logger) initilize() {
 	var backends []logging.Backend
 
 	logger.logQueue = NewLinkedList(true)
-	logger.log = logging.MustGetLogger("openFEP")
+	logger.log = logging.MustGetLogger(logger.logConfig.Filename)
 
 	if logger.logConfig.AllowConsoleLog {
 		consoleFormat := logging.MustStringFormatter(`%{color}%{time:15:04:05.000} [%{level:.4s}] %{message} %{color:reset}`)
