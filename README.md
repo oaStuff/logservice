@@ -50,6 +50,6 @@ a whole in the application using *logger.LoggerConfig{}*
 
 ### NOTE:
 
-you **MUST** call *logger.ConfigLogger()* at the begining of your application or else the logging will be disabled.
+you **MUST** call *logger.ConfigLogger()* at the begining of your application or else logging will be disabled.
 Calling *logger.ConfigLogger()* with both *AllowFileLog* and *AllowConsoleLog* set to false will automatically disable
 logging totally.
