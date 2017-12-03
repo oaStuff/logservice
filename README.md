@@ -46,10 +46,10 @@ using the above code logging will happen at the console and in a file automatica
 called *logs* within your application folder.
 
 you can allow/disable  file logging as well as console logging. You could also disable logging as
-a whole in the application using *logger.LoggerConfig{}*
+a whole in the application using `logger.LoggerConfig{}`
 
 ### NOTE:
 
-you **MUST** call *logger.ConfigLogger()* at the begining of your application or else logging will be disabled.
-Calling *logger.ConfigLogger()* with both *AllowFileLog* and *AllowConsoleLog* set to false will automatically disable
+you **MUST** call `logger.ConfigLogger()` at the begining of your application or else logging will be disabled.
+Calling `logger.ConfigLogger()` with both `AllowFileLog` and `AllowConsoleLog` set to false will automatically disable
 logging totally.
