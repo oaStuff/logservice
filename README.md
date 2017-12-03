@@ -47,3 +47,9 @@ called *logs* within your application folder.
 
 you can allow/disable  file logging as well as console logging. You could also disable logging as
 a whole in the application using *logger.LoggerConfig{}*
+
+### NOTE:
+
+you **MUST** call *logger.ConfigLogger()* at the begining of your application or else the logging will be disabled.
+Calling *logger.ConfigLogger()* with both *AllowFileLog* and *AllowConsoleLog* set to false will automatically disable
+logging totally.
