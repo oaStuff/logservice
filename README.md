@@ -1,7 +1,7 @@
 Logging Service
 ================
 
-A logging service around [go-logging](https://github.com/op/go-logging) 
+A logging library around [go-logging](https://github.com/op/go-logging) 
 and using [lumberjack.v2](http://gopkg.in/natefinch/lumberjack.v2) for rotational file configuration.
 
 You can you dep to get the dependencies if you want to work on the file
