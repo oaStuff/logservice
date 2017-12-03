@@ -2,12 +2,13 @@ package logger
 
 
 import (
-"github.com/op/go-logging"
-"os"
-"runtime"
-"fmt"
-"path/filepath"
-"gopkg.in/natefinch/lumberjack.v2"
+	"github.com/op/go-logging"
+	"os"
+	"runtime"
+	"fmt"
+	"path/filepath"
+	"gopkg.in/natefinch/lumberjack.v2"
+	"math/rand"
 )
 
 const (
@@ -17,25 +18,28 @@ const (
 	cRITICAL
 )
 
-var logQueue *LinkedList
-var log *logging.Logger
-var logConfig LoggerConfig
+type Logger struct {
+	logQueue 	*LinkedList
+	log 		*logging.Logger
+	logConfig 	LoggerConfig
+}
 
 type LoggerConfig struct {
 	Enabled			bool
 	AllowFileLog	bool
 	AllowConsoleLog	bool
+	Filename		string
 }
 
 
 type logDetails struct {
-	message string;
+	message string
 	level int
 }
 
-func Info(msg string)  {
+func (logger *Logger) Info(msg string)  {
 
-	if !logConfig.Enabled {
+	if !logger.logConfig.Enabled {
 		return
 	}
 
@@ -48,12 +52,12 @@ func Info(msg string)  {
 		details.message = msg
 	}
 
-	logQueue.Add(details)
+	logger.logQueue.Add(details)
 }
 
-func Warn(msg string)  {
+func (logger *Logger) Warn(msg string)  {
 
-	if !logConfig.Enabled {
+	if !logger.logConfig.Enabled {
 		return
 	}
 
@@ -66,12 +70,12 @@ func Warn(msg string)  {
 		details.message = msg
 	}
 
-	logQueue.Add(details)
+	logger.logQueue.Add(details)
 }
 
-func Error(msg string)  {
+func (logger *Logger) Error(msg string)  {
 
-	if !logConfig.Enabled {
+	if !logger.logConfig.Enabled {
 		return
 	}
 
@@ -84,12 +88,12 @@ func Error(msg string)  {
 		details.message = msg
 	}
 
-	logQueue.Add(details)
+	logger.logQueue.Add(details)
 }
 
-func Critical(msg string)  {
+func (logger *Logger) Critical(msg string)  {
 
-	if !logConfig.Enabled {
+	if !logger.logConfig.Enabled {
 		return
 	}
 
@@ -102,31 +106,39 @@ func Critical(msg string)  {
 		details.message = msg
 	}
 
-	logQueue.Add(details)
+	logger.logQueue.Add(details)
 }
 
-func ConfigLogger(config LoggerConfig)  {
-	logConfig = config
-	logConfig.Enabled = logConfig.Enabled && (logConfig.AllowFileLog || logConfig.AllowConsoleLog)
-	initilize()
+func Neww(config LoggerConfig) *Logger {
+	logger := &Logger{}
+	logger.logConfig = config
+	logger.logConfig.Enabled = logger.logConfig.Enabled && (logger.logConfig.AllowFileLog || logger.logConfig.AllowConsoleLog)
+	logger.initilize()
+
+	return logger
 }
 
-func initilize() {
+func (logger *Logger) initilize() {
+
+	if "" == logger.logConfig.Filename {
+		b := make([]byte, 5)
+		rand.Read(b)
+		logger.logConfig.Filename = os.Args[0] + fmt.Sprintf("%x",b)
+	}
 
 	ll := &lumberjack.Logger{
-		Filename:"logs/" + os.Args[0] + ".log",
+		Filename:"logs/" + logger.logConfig.Filename + ".log",
 		MaxAge:30,
 		MaxBackups:20,
 		MaxSize:1,
 	}
 
-	//var index = 0
 	var backends []logging.Backend
 
-	logQueue = NewLinkedList(true)
-	log = logging.MustGetLogger("openFEP")
+	logger.logQueue = NewLinkedList(true)
+	logger.log = logging.MustGetLogger("openFEP")
 
-	if logConfig.AllowConsoleLog {
+	if logger.logConfig.AllowConsoleLog {
 		consoleFormat := logging.MustStringFormatter(`%{color}%{time:15:04:05.000} [%{level:.4s}] %{message} %{color:reset}`)
 		consoleBackend := logging.NewLogBackend(os.Stderr, "", 0)
 		consoleBackendFormatter := logging.NewBackendFormatter(consoleBackend, consoleFormat)
@@ -134,7 +146,7 @@ func initilize() {
 	}
 
 
-	if logConfig.AllowFileLog {
+	if logger.logConfig.AllowFileLog {
 		fileFormat := logging.MustStringFormatter(`%{time:15:04:05.000} [%{level:.4s}] %{message} `)
 		fileBackend := logging.NewLogBackend(ll, "", 0)
 		fileBackendFormatter := logging.NewBackendFormatter(fileBackend, fileFormat)
@@ -145,22 +157,22 @@ func initilize() {
 		logging.SetBackend(backends...)
 	}
 
-	go doLogging()
+	go logger.doLogging()
 }
 
-func doLogging()  {
+func (logger *Logger) doLogging()  {
 	for{
-		details, ok := logQueue.Take().(logDetails)
+		details, ok := logger.logQueue.Take().(logDetails)
 		if ok {
 			switch details.level {
 			case iNFO:
-				log.Info(details.message)
+				logger.log.Info(details.message)
 			case wARN:
-				log.Warning(details.message)
+				logger.log.Warning(details.message)
 			case eRROR:
-				log.Error(details.message)
+				logger.log.Error(details.message)
 			case cRITICAL:
-				log.Critical(details.message)
+				logger.log.Critical(details.message)
 			}
 		}
 	}

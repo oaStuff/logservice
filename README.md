@@ -33,7 +33,7 @@ import (
 
 
 func main() {
-	logger.ConfigLogger(logger.LoggerConfig{Enabled:true, AllowFileLog:true, AllowConsoleLog:true})
+	logger := logger.Neww(logger.LoggerConfig{Enabled:true, AllowFileLog:true, AllowConsoleLog:true})
 	logger.Info("Info message")
 	logger.Warn("Warn message")
 	logger.Critical("Critical message")
@@ -50,6 +50,6 @@ a whole in the application using `logger.LoggerConfig{}`
 
 ### NOTE:
 
-you **MUST** call `logger.ConfigLogger()` at the begining of your application or else logging will be disabled.
-Calling `logger.ConfigLogger()` with both `AllowFileLog` and `AllowConsoleLog` in 
+you **MUST** call `logger.New()` to get a logger for your application.
+Calling `logger.New()` with both `AllowFileLog` and `AllowConsoleLog` in 
 `logger.LoggerConfig{}` set to false will automatically disable logging totally.
