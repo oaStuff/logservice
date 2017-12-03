@@ -46,4 +46,4 @@ using the above code logging will happen at the console and in a file automatica
 called *logs* within your application folder.
 
 you can allow/disable  file logging as well as console logging. You could also disable logging as
-a whole in the application. 
+a whole in the application using *logger.LoggerConfig{}*
