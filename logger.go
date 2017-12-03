@@ -19,7 +19,14 @@ const (
 
 var logQueue *LinkedList
 var log *logging.Logger
-var loggerEnabled = false
+var logConfig LoggerConfig
+
+type LoggerConfig struct {
+	Enabled			bool
+	AllowFileLog	bool
+	AllowConsoleLog	bool
+}
+
 
 type logDetails struct {
 	message string;
@@ -28,7 +35,7 @@ type logDetails struct {
 
 func Info(msg string)  {
 
-	if !loggerEnabled {
+	if !logConfig.Enabled {
 		return
 	}
 
@@ -46,7 +53,7 @@ func Info(msg string)  {
 
 func Warn(msg string)  {
 
-	if !loggerEnabled {
+	if !logConfig.Enabled {
 		return
 	}
 
@@ -64,7 +71,7 @@ func Warn(msg string)  {
 
 func Error(msg string)  {
 
-	if !loggerEnabled {
+	if !logConfig.Enabled {
 		return
 	}
 
@@ -82,7 +89,7 @@ func Error(msg string)  {
 
 func Critical(msg string)  {
 
-	if !loggerEnabled {
+	if !logConfig.Enabled {
 		return
 	}
 
@@ -98,11 +105,13 @@ func Critical(msg string)  {
 	logQueue.Add(details)
 }
 
-func EnableLogging(enabled bool)  {
-	loggerEnabled = enabled
+func ConfigLogger(config LoggerConfig)  {
+	logConfig = config
+	logConfig.Enabled = logConfig.Enabled && (logConfig.AllowFileLog || logConfig.AllowConsoleLog)
+	initilize()
 }
 
-func init() {
+func initilize() {
 
 	ll := &lumberjack.Logger{
 		Filename:"logs/" + os.Args[0] + ".log",
@@ -111,15 +120,31 @@ func init() {
 		MaxSize:1,
 	}
 
+	//var index = 0
+	var backends []logging.Backend
+
 	logQueue = NewLinkedList(true)
 	log = logging.MustGetLogger("openFEP")
-	consoleFormat := logging.MustStringFormatter(`%{color}%{time:15:04:05.000} [%{level:.4s}] %{message} %{color:reset}`)
-	fileFormat := logging.MustStringFormatter(`%{time:15:04:05.000} [%{level:.4s}] %{message} `)
-	consoleBackend := logging.NewLogBackend(os.Stderr, "", 0)
-	fileBackend := logging.NewLogBackend(ll,"",0)
-	consoleBackendFormatter := logging.NewBackendFormatter(consoleBackend, consoleFormat)
-	fileBackendFormatter := logging.NewBackendFormatter(fileBackend,fileFormat)
-	logging.SetBackend(consoleBackendFormatter,fileBackendFormatter)
+
+	if logConfig.AllowConsoleLog {
+		consoleFormat := logging.MustStringFormatter(`%{color}%{time:15:04:05.000} [%{level:.4s}] %{message} %{color:reset}`)
+		consoleBackend := logging.NewLogBackend(os.Stderr, "", 0)
+		consoleBackendFormatter := logging.NewBackendFormatter(consoleBackend, consoleFormat)
+		backends = append(backends, consoleBackendFormatter)
+	}
+
+
+	if logConfig.AllowFileLog {
+		fileFormat := logging.MustStringFormatter(`%{time:15:04:05.000} [%{level:.4s}] %{message} `)
+		fileBackend := logging.NewLogBackend(ll, "", 0)
+		fileBackendFormatter := logging.NewBackendFormatter(fileBackend, fileFormat)
+		backends = append(backends, fileBackendFormatter)
+	}
+
+	if len(backends) > 0 {
+		logging.SetBackend(backends...)
+	}
+
 	go doLogging()
 }
 
