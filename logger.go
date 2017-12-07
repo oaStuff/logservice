@@ -19,9 +19,10 @@ const (
 )
 
 type Logger struct {
-	logQueue 	*LinkedList
-	log 		*logging.Logger
-	logConfig 	LoggerConfig
+	logQueue 		*LinkedList
+	log 			*logging.Logger
+	logConfig 		LoggerConfig
+	callStackSkip	int
 }
 
 type LoggerConfig struct {
@@ -44,7 +45,7 @@ func (logger *Logger) Info(msg string)  {
 	}
 
 	details := logDetails{level:iNFO}
-	_, file, line, ok := runtime.Caller(1)
+	_, file, line, ok := runtime.Caller(logger.callStackSkip)
 	if ok {
 		_, filename := filepath.Split(file)
 		details.message = fmt.Sprintf(" ▶  %s ( %s:%d )",msg, filename, line)
@@ -62,7 +63,7 @@ func (logger *Logger) Warn(msg string)  {
 	}
 
 	details := logDetails{level:wARN}
-	_, file, line, ok := runtime.Caller(1)
+	_, file, line, ok := runtime.Caller(logger.callStackSkip)
 	if ok {
 		_, filename := filepath.Split(file)
 		details.message = fmt.Sprintf(" ▶  %s ( %s:%d )",msg, filename, line)
@@ -80,7 +81,7 @@ func (logger *Logger) Error(msg string)  {
 	}
 
 	details := logDetails{level:eRROR}
-	_, file, line, ok := runtime.Caller(1)
+	_, file, line, ok := runtime.Caller(logger.callStackSkip)
 	if ok {
 		_, filename := filepath.Split(file)
 		details.message = fmt.Sprintf(" ▶  %s ( %s:%d )",msg, filename, line)
@@ -98,7 +99,7 @@ func (logger *Logger) Critical(msg string)  {
 	}
 
 	details := logDetails{level:cRITICAL}
-	_, file, line, ok := runtime.Caller(1)
+	_, file, line, ok := runtime.Caller(logger.callStackSkip)
 	if ok {
 		_, filename := filepath.Split(file)
 		details.message = fmt.Sprintf(" ▶  %s ( %s:%d )",msg, filename, line)
@@ -111,11 +112,20 @@ func (logger *Logger) Critical(msg string)  {
 
 func New(config LoggerConfig) *Logger {
 	logger := &Logger{}
+	logger.callStackSkip = 1
 	logger.logConfig = config
 	logger.logConfig.Enabled = logger.logConfig.Enabled && (logger.logConfig.AllowFileLog || logger.logConfig.AllowConsoleLog)
 	logger.initilize()
 
 	return logger
+}
+
+func (logger *Logger) SetCallStackSkip(skip int)  {
+	logger.callStackSkip = skip
+}
+
+func (logger *Logger) GetCallStackSkip() int {
+	return logger.callStackSkip
 }
 
 func (logger *Logger) initilize() {
