@@ -23,6 +23,10 @@ type Logger struct {
 	log 			*logging.Logger
 	logConfig 		LoggerConfig
 	callStackSkip	int
+	infoState		bool
+	errorState		bool
+	warnState		bool
+	critState		bool
 }
 
 type LoggerConfig struct {
@@ -38,9 +42,29 @@ type logDetails struct {
 	level int
 }
 
+func (logger *Logger) EnableInfo(state bool) (prev bool) {
+	prev, logger.infoState = logger.infoState, state
+	return
+}
+
+func (logger *Logger) EnableError(state bool) (prev bool) {
+	prev, logger.errorState = logger.errorState, state
+	return
+}
+
+func (logger *Logger) EnableWar(state bool) (prev bool) {
+	prev, logger.warnState = logger.warnState, state
+	return
+}
+
+func (logger *Logger) EnableCrit(state bool) (prev bool) {
+	prev, logger.critState = logger.critState, state
+	return
+}
+
 func (logger *Logger) Info(msg string)  {
 
-	if !logger.logConfig.Enabled {
+	if !logger.logConfig.Enabled || !logger.infoState {
 		return
 	}
 
@@ -58,7 +82,7 @@ func (logger *Logger) Info(msg string)  {
 
 func (logger *Logger) Warn(msg string)  {
 
-	if !logger.logConfig.Enabled {
+	if !logger.logConfig.Enabled || !logger.warnState {
 		return
 	}
 
@@ -76,7 +100,7 @@ func (logger *Logger) Warn(msg string)  {
 
 func (logger *Logger) Error(msg string)  {
 
-	if !logger.logConfig.Enabled {
+	if !logger.logConfig.Enabled || !logger.errorState {
 		return
 	}
 
@@ -94,7 +118,7 @@ func (logger *Logger) Error(msg string)  {
 
 func (logger *Logger) Critical(msg string)  {
 
-	if !logger.logConfig.Enabled {
+	if !logger.logConfig.Enabled || !logger.critState {
 		return
 	}
 
@@ -115,6 +139,11 @@ func New(config LoggerConfig) *Logger {
 	logger.callStackSkip = 1
 	logger.logConfig = config
 	logger.logConfig.Enabled = logger.logConfig.Enabled && (logger.logConfig.AllowFileLog || logger.logConfig.AllowConsoleLog)
+	logger.critState = true
+	logger.errorState = true
+	logger.infoState = true
+	logger.warnState = true
+
 	logger.initilize()
 
 	return logger
@@ -136,11 +165,22 @@ func (logger *Logger) initilize() {
 		logger.logConfig.Filename = os.Args[0] + fmt.Sprintf("%x",b)
 	}
 
-	ll := &lumberjack.Logger{
-		Filename:"logs/" + logger.logConfig.Filename + ".log",
-		MaxAge:30,
-		MaxBackups:20,
-		MaxSize:1,
+	var ll *lumberjack.Logger
+
+	if logger.logConfig.Filename == "" {
+		ll = &lumberjack.Logger{
+			Filename:   "logs/" + os.Args[0] + ".log",
+			MaxAge:     30,
+			MaxBackups: 20,
+			MaxSize:    1,
+		}
+	} else {
+		ll = &lumberjack.Logger{
+			Filename:   logger.logConfig.Filename,
+			MaxAge:     30,
+			MaxBackups: 20,
+			MaxSize:    1,
+		}
 	}
 
 	var backends []logging.Backend
